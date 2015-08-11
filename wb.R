@@ -8,18 +8,19 @@
 
 #t<-read.csv("train.txt",header=T,sep="\t",quote="\n") 
 #p<-read.csv("predict.txt",header=T,sep="\t",quote="\n")
-load("RDataTest")
+#load("RDataTest")
 
 #t<-read.csv("t.txt",sep="\t",quote="") 
 #p<-read.csv("p.txt",sep="\t",quote="")
-names(t)=c("uid","mid","time","foreward_count","comment_count","like_count","content")
-names(p)=c("uid","mid","time","foreward_count","comment_count","like_count","content")
+#names(t)=c("uid","mid","time","foreward_count","comment_count","like_count","content")
+#names(p)=c("uid","mid","time","foreward_count","comment_count","like_count","content")
 
 #p=p[p$uid=="82990720c0936340c7a17e712f549b30",]
 #t=t[t$uid=="82990720c0936340c7a17e712f549b30",]
 #p=p[p$uid=="3df25e570db062bab9cbf0782cf09630",]
 #t=t[t$uid=="3df25e570db062bab9cbf0782cf09630",]
 
+load("seg.RData")
 
 #print(Sys.time())
 #cat("> calculate mean value \n")
@@ -108,52 +109,70 @@ imean=function(x)
 if(1)
 {
     print(Sys.time())
-    library(rJava)
-    library(Rwordseg)
     library("stringr")
-    library("tm")
     library("cluster")
     library("mclust")
-    cat("segment",Sys.time(),"\n")
-    data=rbind(t,p)
-    doc=as.character(data$content) 
-    doc=gsub(pattern="http:[a-zA-Z\\/\\.0-9]+","",doc)                            
-    tag=str_extract(doc,"#.+?#") 
-    tag=na.omit(tag)  #去除NA
-    tag=unique(tag)    #去重
-    if(length(tag)>0) insertWords(tag)
-    docSeg=segmentCN(doc)
-    cat("corpus",Sys.time(),"\n")
-    #detach("package:Rwordseg", unload=TRUE)
+    if(0)
+    {
+        library(rJava)
+        library(Rwordseg)
+        cat(">> segment ")
+        print(Sys.time())
+        doc=c(as.character(t$content),as.character(p$content)) 
+        dw=c(weekdays(as.Date(t$time)),weekdays(as.Date(p$time)))
+        doc=gsub(pattern="http:[a-zA-Z\\/\\.0-9]+","",doc)                            
+        tag=str_extract(doc,"#.+?#") 
+        tag=na.omit(tag)  #去除NA
+        tag=unique(tag)    #去重
+        if(length(tag)>0) insertWords(tag)
+        #docSeg=NULL
+        #for(si in 1:(NROW(doc)%/%10000))
+        #{
+            #cat(">>> ",si,"/",(NROW(doc)%/%10000))
+            #print(Sys.time())
+            #docSeg[si]=segmentCN(doc[((si-1)*10000+1):(si*10000)])
+        #}
+        docSeg=segmentCN(doc)
+        #detach("package:Rwordseg", unload=TRUE)
+
+    }
+    library("tm")
+    cat(">> corpus ")
+    print(Sys.time())
     docCor=Corpus(VectorSource(docSeg))
     # remove numbers
     #docCor=tm_map(docCor, removeNumbers)
+    cat(">> stopWord ")
+    print(Sys.time())
     # remove stop words
     stw=read.table(file="dict/stopWord.txt",quote="",colClasses="character")
     docCor=tm_map(docCor,tm::removeWords,stw[,1])
+    cat(">> tdm ")
+    print(Sys.time())
     ctl=list(removePunctuation=T,minDocFreq=5,wordLengths = c(1, Inf),weighting = weightTfIdf)
     docTdm=TermDocumentMatrix(docCor,control=ctl)
     #length(docTdm$dimnames$Terms)
     #tdm_removed=removeSparseTerms(docTdm, 0.9998) # 1-去除了低于 99.98% 的稀疏条目项
     #length(tdm_removed$dimnames$Terms)
     #time week features
-    dw=weekdays(as.Date(data$time))
-    Mon=rep(0,NROW(dw))
-    Tue=rep(0,NROW(dw))
-    Wed=rep(0,NROW(dw))
-    Thu=rep(0,NROW(dw))
-    Fri=rep(0,NROW(dw))
-    Sat=rep(0,NROW(dw))
-    Sun=rep(0,NROW(dw))
-    Mon[dw=="Monday"]=1
-    Tue[dw=="Tuesday"]=1
-    Wed[dw=="Wednesday"]=1
-    Thu[dw=="Thursday"]=1
-    Fri[dw=="Friday"]=1
-    Sat[dw=="Saturday"]=1
-    Sun[dw=="Sunday"]=1
+    #dw=weekdays(as.Date(data$time))
+    #Mon=rep(0,NROW(dw))
+    #Tue=rep(0,NROW(dw))
+    #Wed=rep(0,NROW(dw))
+    #Thu=rep(0,NROW(dw))
+    #Fri=rep(0,NROW(dw))
+    #Sat=rep(0,NROW(dw))
+    #Sun=rep(0,NROW(dw))
+    #Mon[dw=="Monday"]=1
+    #Tue[dw=="Tuesday"]=1
+    #Wed[dw=="Wednesday"]=1
+    #Thu[dw=="Thursday"]=1
+    #Fri[dw=="Friday"]=1
+    #Sat[dw=="Saturday"]=1
+    #Sun[dw=="Sunday"]=1
 
-    cat("clust",Sys.time(),"\n")
+    cat(">> clust ")
+    print(Sys.time())
     #clust
     ctNum=10
     m=as.matrix(docTdm)
@@ -176,7 +195,8 @@ if(1)
     tc=cbind(clust=ct[1:NROW(t)],t)
     pc=cbind(clust=ct[(1+NROW(t)):NROW(doc)],p)
     #7
-    cat("split",Sys.time(),"\n")
+    cat(">> split ")
+    print(Sys.time())
     tp<-split(tc,f=as.factor(tc$uid))
     tcm=NULL
     for(tpi in 1:NROW(tp))
