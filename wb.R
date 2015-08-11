@@ -4,7 +4,7 @@
 
 #t<-read.csv("weibo_train_data.txt",header=T,sep="\t",quote="\n") 
 #p<-read.csv("weibo_predict_data.txt",header=T,sep="\t",quote="\n")
-#load("RDataTotal")
+load("RDataTotal")
 
 #t<-read.csv("train.txt",header=T,sep="\t",quote="\n") 
 #p<-read.csv("predict.txt",header=T,sep="\t",quote="\n")
@@ -20,7 +20,7 @@
 #p=p[p$uid=="3df25e570db062bab9cbf0782cf09630",]
 #t=t[t$uid=="3df25e570db062bab9cbf0782cf09630",]
 
-load("seg.RData")
+#load("seg.RData")
 
 #print(Sys.time())
 #cat("> calculate mean value \n")
@@ -105,8 +105,47 @@ imean=function(x)
     }
     return(result)
 }
+#7 4.2
+auto=function(x)
+{
+    if(is.factor(x))
+    {
+        result=NA
+    }else
+    {
+        if(mean(x)>5)
+        {
+            result=as.integer(mean(x))
+        }else
+        {
+            xOutlierx=boxplot.stats(x)$out
+            result=as.integer((sum(x)-sum(xOutlierx)+boxplot.stats(x)$stats[5]*NROW(xOutlierx))/NROW(x))
+        }
+    }
+    return(result)
+}
+#8
+test=function(x)
+{
+    if(is.factor(x))
+    {
+        result=NA
+    }else
+    {
+        result=rep(0,7)
+        wk=c( "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
+        for(wi in 1:7)
+        {
+            #as.integer((sum(l1)-sum(l1out))/(NROW(l1)-NROW(l1out)))
+            f1=tu$foreward_count[ weekdays(as.Date(tu$time))==wk[wi]]
+            f1out=boxplot.stats(f1)$out
+            if(NROW(f1)>0) foreward_mean[wi]=as.integer((sum(f1)-sum(f1out)+boxplot.stats(f1)$stats[5]*NROW(f1out))/NROW(f1))
+        }
+    }
+    return(result)
+}
 
-if(1)
+if(0)
 {
     print(Sys.time())
     library("stringr")
@@ -194,7 +233,7 @@ if(1)
     #doc=cbind(doc,clust=ct,fm=rep(NA,NROW(ct),cm=rep(NA,NROW(ct),lm=rep(NA,NROW(ct))
     tc=cbind(clust=ct[1:NROW(t)],t)
     pc=cbind(clust=ct[(1+NROW(t)):NROW(doc)],p)
-    #7
+    #8
     cat(">> split ")
     print(Sys.time())
     tp<-split(tc,f=as.factor(tc$uid))
@@ -252,16 +291,51 @@ if(1)
     print(Sys.time())
 }
 
-funl=c(izero,rmOutlier,rmOutlier2,rmOutlierMorethanZero,rmOutlierMorethanZero2,imean)
-for(fi in 1:7)
+funl=c(izero,rmOutlier,rmOutlier2,rmOutlierMorethanZero,rmOutlierMorethanZero2,imean,auto)
+for(fi in 7:8)
 {
-
-    if(fi<7)
+    if(fi<8)
     {
         tm<-aggregate(t,by=list(t$uid),FUN=funl[[fi]])[,c(1,5:7)]
         names(tm)<-c("uid","foreward_count","comment_count","like_count")
         pu<-p[,1:2]
         r<-merge(pu,tm,by=c("uid"),all.x=T)
+    }else if(fi==8)
+    {
+        #9
+        cat(">> split ")
+        print(Sys.time())
+        tp<-split(t,f=as.factor(t$uid))
+        tcm=NULL
+        for(tpi in 1:NROW(tp))
+        {
+            tu=tp[tpi][[1]]
+            if(NROW(tu)==0) next
+            foreward_mean=rep(0,7)
+            comment_mean=rep(0,7)
+            like_mean=rep(0,7)
+            wk=c( "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
+            for(wi in 1:7)
+            {
+                #as.integer((sum(l1)-sum(l1out))/(NROW(l1)-NROW(l1out)))
+                f1=tu$foreward_count[ weekdays(as.Date(tu$time))==wk[wi]]
+                f1out=boxplot.stats(f1)$out
+                if(NROW(f1)>0) foreward_mean[wi]=as.integer((sum(f1)-sum(f1out)+boxplot.stats(f1)$stats[5]*NROW(f1out))/NROW(f1))
+
+                c1=tu$comment_count[ weekdays(as.Date(tu$time))==wk[wi]]
+                c1out=boxplot.stats(c1)$out
+                if(NROW(c1)>0) comment_mean[wi]=as.integer((sum(c1)-sum(c1out)+boxplot.stats(c1)$stats[5]*NROW(c1out))/NROW(c1))
+
+                l1=tu$like_count[ weekdays(as.Date(tu$time))==wk[wi]]
+                l1out=boxplot.stats(l1)$out
+                if(NROW(l1)>0) like_mean[wi]=as.integer((sum(l1)-sum(l1out)+boxplot.stats(l1)$stats[5]*NROW(l1out))/NROW(l1))
+
+            }
+            tcm=rbind(tcm,data.frame(rep(as.character(tu$uid[1]),7),wk,foreward_mean,comment_mean,like_mean))
+        }
+        colnames(tcm)<-c("uid","week","foreward_count","comment_count","like_count")
+        pcu=cbind(p[,1:2],week=dw[(1+NROW(t)):NROW(doc)])
+        r<-merge(pcu,tcm,by=c("uid","week"),all.x=T)
     }else
     {
         pcu=cbind(pc[,1:3],week=dw[(1+NROW(t)):NROW(doc)])
@@ -278,17 +352,22 @@ for(fi in 1:7)
     r$like_count[is.na(r$like_count)]=0
     #save into .txt
     #cat("r.NROW= ", NROW(r)," p.NROW= ",NROW(p),"\n")
-    #write.csv(r,"r.txt")
+    write.csv(r,"r.txt")
     #linux \t for tabs
     #system("sed -e 's#^\"[0-9]*\",##g' -e 's#\",#\t#g' -e 's#\"##g' -e '/_/d' r.txt > weibo_result.txt")
     #OS X ctrl+v+tab for tabs
     #if(fi==1) system("sed -e 's#^\"[0-9]*\",##g' -e 's#\",#	#g' -e 's#\"##g' -e '/_/d' r.txt > 1/weibo_result.txt")
     #if(fi==2) system("sed -e 's#^\"[0-9]*\",##g' -e 's#\",#	#g' -e 's#\"##g' -e '/_/d' r.txt > 2/weibo_result.txt")
+    #if(fi==3) system("sed -e 's#^\"[0-9]*\",##g' -e 's#\",#	#g' -e 's#\"##g' -e '/_/d' r.txt > 3/weibo_result.txt")
+    #if(fi==4) system("sed -e 's#^\"[0-9]*\",##g' -e 's#\",#	#g' -e 's#\"##g' -e '/_/d' r.txt > 4/weibo_result.txt")
+    #if(fi==5) system("sed -e 's#^\"[0-9]*\",##g' -e 's#\",#	#g' -e 's#\"##g' -e '/_/d' r.txt > 5/weibo_result.txt")
     #if(fi==6) system("sed -e 's#^\"[0-9]*\",##g' -e 's#\",#	#g' -e 's#\"##g' -e '/_/d' r.txt > 6/weibo_result.txt")
-    #print(Sys.time())
+    if(fi==7) system("sed -e 's#^\"[0-9]*\",##g' -e 's#\",#	#g' -e 's#\"##g' -e '/_/d' r.txt > 7/weibo_result.txt")
+    if(fi==8) system("sed -e 's#^\"[0-9]*\",##g' -e 's#\",#	#g' -e 's#\"##g' -e '/_/d' r.txt > 8/weibo_result.txt")
+    ##print(Sys.time())
     #cat("> Calculating pricision , only for test \n")
 
-    if(1)
+    if(0)
     {
         rp<-merge(p,r,by=c("uid","mid"))
         devf=abs(rp$foreward_count.y-rp$foreward_count.x)/(rp$foreward_count.x+5)
