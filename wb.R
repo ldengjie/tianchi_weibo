@@ -3,11 +3,11 @@
 #cat("> read data \n")
 #t<-read.table("weibo_train_data.txt",header=T,sep="\t",quote="\n") 
 #p<-read.table("weibo_predict_data.txt",header=T,sep="\t",quote="\n")
-load("RDataTotal")
+#load("RDataTotal")
 #t<-read.table("train.txt",header=T,sep="\t",quote="\n") 
 #p<-read.table("predict.txt",header=T,sep="\t",quote="\n")
-#load("RDataTest")
-#names(p)=c("uid","mid","time","foreward_count","comment_count","like_count","content")
+load("RDataTest")
+names(p)=c("uid","mid","time","foreward_count","comment_count","like_count","content")
 #t<-read.table("t.txt",header=T,sep="\t",quote="\n") 
 #p<-read.table("p.txt",header=T,sep="\t",quote="\n")
 
@@ -102,7 +102,7 @@ imean=function(x)
     return(result)
 }
 
-if(0)
+if(1)
 {
 library(rJava)
 library(Rwordseg)
@@ -130,7 +130,7 @@ docTdm=TermDocumentMatrix(docCor,control)
 #clust
 dist_tdm <- proxy::dist(t(as.matrix(docTdm)), method = 'cosine')
 hc <- hclust(dist_tdm, method = 'mcquitty')
-ctNum=10
+ctNum=20
 ct = cutree(hc,k=ctNum)
 #doc=cbind(doc,clust=ct,fm=rep(NA,NROW(ct),cm=rep(NA,NROW(ct),lm=rep(NA,NROW(ct))
 tc=cbind(clust=ct[1:NROW(t)],t)
@@ -169,7 +169,7 @@ cat("2\n")
 }
 
 funl=c(izero,rmOutlier,rmOutlier2,rmOutlierMorethanZero,rmOutlierMorethanZero2,imean)
-for(fi in c(1,2,6))
+for(fi in 7:7)
 {
 
     if(fi<7)
@@ -193,16 +193,16 @@ cat("3\n")
     r$comment_count[is.na(r$comment_count)]=0
     r$like_count[is.na(r$like_count)]=0
     #save into .txt
-    write.csv(r,"r.txt")
+    #write.csv(r,"r.txt")
     #linux \t for tabs
     #system("sed -e 's#^\"[0-9]*\",##g' -e 's#\",#\t#g' -e 's#\"##g' -e '/_/d' r.txt > weibo_result.txt")
     #OS X ctrl+v+tab for tabs
-    if(fi==1) system("sed -e 's#^\"[0-9]*\",##g' -e 's#\",#	#g' -e 's#\"##g' -e '/_/d' r.txt > 1/weibo_result.txt")
-    if(fi==2) system("sed -e 's#^\"[0-9]*\",##g' -e 's#\",#	#g' -e 's#\"##g' -e '/_/d' r.txt > 2/weibo_result.txt")
-    if(fi==6) system("sed -e 's#^\"[0-9]*\",##g' -e 's#\",#	#g' -e 's#\"##g' -e '/_/d' r.txt > 6/weibo_result.txt")
+    #if(fi==1) system("sed -e 's#^\"[0-9]*\",##g' -e 's#\",#	#g' -e 's#\"##g' -e '/_/d' r.txt > 1/weibo_result.txt")
+    #if(fi==2) system("sed -e 's#^\"[0-9]*\",##g' -e 's#\",#	#g' -e 's#\"##g' -e '/_/d' r.txt > 2/weibo_result.txt")
+    #if(fi==6) system("sed -e 's#^\"[0-9]*\",##g' -e 's#\",#	#g' -e 's#\"##g' -e '/_/d' r.txt > 6/weibo_result.txt")
     #print(Sys.time())
     #cat("> Calculating pricision , only for test \n")
-    if(0)
+    if(1)
     {
         devf=abs(r$foreward_count-p$foreward_count)/(p$foreward_count+5)
         devc=abs(r$comment_count-p$comment_count)/(p$comment_count+3)
