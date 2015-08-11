@@ -1,15 +1,17 @@
 #Rscript wb.R
 #print(Sys.time())
 #cat("> read data \n")
+
 #t<-read.csv("weibo_train_data.txt",header=T,sep="\t",quote="\n") 
 #p<-read.csv("weibo_predict_data.txt",header=T,sep="\t",quote="\n")
 #load("RDataTotal")
+
 #t<-read.csv("train.txt",header=T,sep="\t",quote="\n") 
 #p<-read.csv("predict.txt",header=T,sep="\t",quote="\n")
-#load("RDataTest")
+load("RDataTest")
 
-t<-read.csv("t1.txt",sep="\t",quote="") 
-p<-read.csv("p1.txt",sep="\t",quote="")
+#t<-read.csv("t.txt",sep="\t",quote="") 
+#p<-read.csv("p.txt",sep="\t",quote="")
 names(t)=c("uid","mid","time","foreward_count","comment_count","like_count","content")
 names(p)=c("uid","mid","time","foreward_count","comment_count","like_count","content")
 
@@ -111,13 +113,17 @@ if(1)
     library("stringr")
     library("tm")
     library("cluster")
-    doc=c(as.character(t$content),as.character(p$content)) 
+    library("mclust")
+    cat("segment",Sys.time(),"\n")
+    data=rbind(t,p)
+    doc=as.character(data$content) 
     doc=gsub(pattern="http:[a-zA-Z\\/\\.0-9]+","",doc)                            
-    tag=str_extract(doc,"|.+?|") 
+    tag=str_extract(doc,"#.+?#") 
     tag=na.omit(tag)  #去除NA
     tag=unique(tag)    #去重
     if(length(tag)>0) insertWords(tag)
     docSeg=segmentCN(doc)
+    cat("corpus",Sys.time(),"\n")
     #detach("package:Rwordseg", unload=TRUE)
     docCor=Corpus(VectorSource(docSeg))
     # remove numbers
@@ -125,14 +131,34 @@ if(1)
     # remove stop words
     stw=read.table(file="dict/stopWord.txt",quote="",colClasses="character")
     docCor=tm_map(docCor,tm::removeWords,stw[,1])
-    control=list(removePunctuation=T,minDocFreq=5,wordLengths = c(1, Inf),weighting = weightTfIdf)
-    docTdm=TermDocumentMatrix(docCor,control)
+    ctl=list(removePunctuation=T,minDocFreq=5,wordLengths = c(1, Inf),weighting = weightTfIdf)
+    docTdm=TermDocumentMatrix(docCor,control=ctl)
     #length(docTdm$dimnames$Terms)
     #tdm_removed=removeSparseTerms(docTdm, 0.9998) # 1-去除了低于 99.98% 的稀疏条目项
     #length(tdm_removed$dimnames$Terms)
+    #time week features
+    dw=weekdays(as.Date(data$time))
+    Mon=rep(0,NROW(dw))
+    Tue=rep(0,NROW(dw))
+    Wed=rep(0,NROW(dw))
+    Thu=rep(0,NROW(dw))
+    Fri=rep(0,NROW(dw))
+    Sat=rep(0,NROW(dw))
+    Sun=rep(0,NROW(dw))
+    Mon[dw=="Monday"]=1
+    Tue[dw=="Tuesday"]=1
+    Wed[dw=="Wednesday"]=1
+    Thu[dw=="Thursday"]=1
+    Fri[dw=="Friday"]=1
+    Sat[dw=="Saturday"]=1
+    Sun[dw=="Sunday"]=1
+
+    cat("clust",Sys.time(),"\n")
     #clust
     ctNum=10
-    dm=t(as.matrix(docTdm))
+    m=as.matrix(docTdm)
+    #m=rbind(m, Monday=Mon, Tuesday=Tue, Wednesday=Wed, Thursday=Thu, Friday=Fri, Saturday=Sat, Sunday=Sun)
+    dm=t(m)
     #HC
     dist_tdm <- proxy::dist(dm, method = 'cosine')
     hc <- hclust(dist_tdm, method = 'mcquitty')
@@ -143,38 +169,66 @@ if(1)
     ##k-Medoids
     #pp<-pam(dm,ctNum)
     #ct=pp$clustering
+    #EM
+    #fm<-Mclust(dm,ctNum)
+    #ct=fm$class
     #doc=cbind(doc,clust=ct,fm=rep(NA,NROW(ct),cm=rep(NA,NROW(ct),lm=rep(NA,NROW(ct))
     tc=cbind(clust=ct[1:NROW(t)],t)
     pc=cbind(clust=ct[(1+NROW(t)):NROW(doc)],p)
     #7
+    cat("split",Sys.time(),"\n")
     tp<-split(tc,f=as.factor(tc$uid))
     tcm=NULL
-    print(NROW(tcm))
     for(tpi in 1:NROW(tp))
     {
         tu=tp[tpi][[1]]
         if(NROW(tu)==0) next
         tu2=tu
         cat(">>>>>> ",tpi,"\n")
-        foreward_mean=rep(0,ctNum)
-        comment_mean=rep(0,ctNum)
-        like_mean=rep(0,ctNum)
+        foreward_mean=matrix(rep(0,ctNum*7),ctNum,7)
+        comment_mean=matrix(rep(0,ctNum*7),ctNum,7)
+        like_mean=matrix(rep(0,ctNum*7),ctNum,7)
         for(cti in 1:ctNum)
         {
-            foreward_mean[cti]=as.integer(mean(na.omit(tu$foreward_count[tu$clust==cti])))
-            comment_mean[cti]=as.integer(mean(na.omit(tu$comment_count[tu$clust==cti])))
-            like_mean[cti]=as.integer(mean(na.omit(tu$like_count[tu$clust==cti])))
-            cat(foreward_mean[cti],comment_mean[cti],like_mean[cti],"\n")
+            #foreward_mean[cti]=as.integer(mean(na.omit(tu$foreward_count[tu$clust==cti])))
+            #f1=tu$foreward_count[tu$clust==cti]
+            #f1out=boxplot.stats(f1)$out
+            #foreward_mean[cti]=as.integer((sum(f1)-sum(f1out))/(NROW(f1)-NROW(f1out)))
+            #comment_mean[cti]=as.integer(mean(na.omit(tu$comment_count[tu$clust==cti])))
+            #c1=tu$comment_count[tu$clust==cti]
+            #cOutlier=boxplot.stats(c1)$out
+            #comment_mean[cti]=as.integer((sum(c1)-sum(cOutlier))/(NROW(c1)-NROW(cOutlier)))
+            #like_mean[cti]=as.integer(mean(na.omit(tu$like_count[tu$clust==cti])))
+            #l1=tu$like_count[tu$clust==cti]
+            #lOutlier=boxplot.stats(l1)$out
+            #like_mean[cti]=as.integer((sum(l1)-sum(lOutlier))/(NROW(l1)-NROW(lOutlier)))
+            #cat(foreward_mean[cti],comment_mean[cti],like_mean[cti],"\n")
+            wk=c( "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
+            for(wi in 1:7)
+            {
+                #as.integer((sum(l1)-sum(l1out))/(NROW(l1)-NROW(l1out)))
+                f1=tu$foreward_count[((tu$clust==cti) + (weekdays(as.Date(tu$time))==wk[wi]))==2]
+                f1out=boxplot.stats(f1)$out
+                if(NROW(f1)>0) foreward_mean[cti,wi]=as.integer((sum(f1)-sum(f1out)+boxplot.stats(f1)$stats[5]*NROW(f1out))/NROW(f1))
+
+                c1=tu$comment_count[((tu$clust==cti) + (weekdays(as.Date(tu$time))==wk[wi]))==2]
+                c1out=boxplot.stats(c1)$out
+                if(NROW(c1)>0) comment_mean[cti,wi]=as.integer((sum(c1)-sum(c1out)+boxplot.stats(c1)$stats[5]*NROW(c1out))/NROW(c1))
+
+                l1=tu$like_count[((tu$clust==cti) + (weekdays(as.Date(tu$time))==wk[wi]))==2]
+                l1out=boxplot.stats(l1)$out
+                if(NROW(l1)>0) like_mean[cti,wi]=as.integer((sum(l1)-sum(l1out)+boxplot.stats(l1)$stats[5]*NROW(l1out))/NROW(l1))
+            }
         }
         print(rep(tu$uid[1],ctNum))
         print(seq(1:ctNum))
         print(foreward_mean)
         print(comment_mean)
         print(like_mean)
-        tcm=rbind(tcm,data.frame(rep(as.character(tu$uid[1]),ctNum),seq(1:ctNum),foreward_mean,comment_mean,like_mean))
+        tcm=rbind(tcm,data.frame(rep(as.character(tu$uid[1]),ctNum*7),rep(seq(1:ctNum),7),rep(wk,10),c(foreward_mean),c(comment_mean),c(like_mean)))
     }
     print(NROW(tcm))
-    colnames(tcm)<-c("uid","clust","foreward_count","comment_count","like_count")
+    colnames(tcm)<-c("uid","clust","week","foreward_count","comment_count","like_count")
     print(Sys.time())
 }
 
@@ -190,8 +244,8 @@ for(fi in 1:7)
         r<-merge(pu,tm,by=c("uid"),all.x=T)
     }else
     {
-        pcu=pc[,1:3]
-        r<-merge(pcu,tcm,by=c("uid","clust"),all.x=T)
+        pcu=cbind(pc[,1:3],week=dw[(1+NROW(t)):NROW(doc)])
+        r<-merge(pcu,tcm,by=c("uid","clust","week"),all.x=T)
     }
 
     cat(fi,"\n")

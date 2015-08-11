@@ -1,3 +1,8 @@
 RData*
 *predict*
 *train*
+.DS_Store
+.Rhistory
+.RData
+.*.swp
+.*.swo
