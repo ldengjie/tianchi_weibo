@@ -1,0 +1,5 @@
+score , test
+33.81 , 24.47 # 08.11 all=0
+37.25 , 28.26 # 08.12 mean
+38.57 , 28.80 # 08.12 delete outlier
+38.74 , 29.02 # 08.12 replace outlier with [5]

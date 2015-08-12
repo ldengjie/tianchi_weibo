@@ -8,19 +8,19 @@
 
 #t<-read.csv("train.txt",header=T,sep="\t",quote="\n") 
 #p<-read.csv("predict.txt",header=T,sep="\t",quote="\n")
-load("RDataTest")
+#load("RDataTest")
 
 #t<-read.csv("t.txt",sep="\t",quote="") 
 #p<-read.csv("p.txt",sep="\t",quote="")
-names(t)=c("uid","mid","time","foreward_count","comment_count","like_count","content")
-names(p)=c("uid","mid","time","foreward_count","comment_count","like_count","content")
+#names(t)=c("uid","mid","time","foreward_count","comment_count","like_count","content")
+#names(p)=c("uid","mid","time","foreward_count","comment_count","like_count","content")
 
 #p=p[p$uid=="82990720c0936340c7a17e712f549b30",]
 #t=t[t$uid=="82990720c0936340c7a17e712f549b30",]
 #p=p[p$uid=="3df25e570db062bab9cbf0782cf09630",]
 #t=t[t$uid=="3df25e570db062bab9cbf0782cf09630",]
 
-#load("seg.RData")
+load("cor.RData")
 
 #print(Sys.time())
 #cat("> calculate mean value \n")
@@ -145,46 +145,47 @@ test=function(x)
     return(result)
 }
 
-if(0)
+
+if(1)
 {
     print(Sys.time())
     library("stringr")
     library("cluster")
     library("mclust")
-    if(0)
+    if(1)
     {
         library(rJava)
         library(Rwordseg)
         cat(">> segment ")
         print(Sys.time())
-        doc=c(as.character(t$content),as.character(p$content)) 
-        doc=gsub(pattern="http:[a-zA-Z\\/\\.0-9]+","",doc)                            
-        tag=str_extract(doc,"#.+?#") 
-        tag=na.omit(tag)  #去除NA
-        tag=unique(tag)    #去重
-        if(length(tag)>0) insertWords(tag)
-        #docSeg=NULL
-        #for(si in 1:(NROW(doc)%/%10000))
-        #{
-            #cat(">>> ",si,"/",(NROW(doc)%/%10000))
-            #print(Sys.time())
-            #docSeg[si]=segmentCN(doc[((si-1)*10000+1):(si*10000)])
-        #}
-        docSeg=segmentCN(doc)
-        #detach("package:Rwordseg", unload=TRUE)
+        #doc=c(as.character(t$content),as.character(p$content)) 
+        #doc=gsub(pattern="http:[a-zA-Z\\/\\.0-9]+","",doc)                            
+        #tag=str_extract(doc,"#.+?#") 
+        #tag=na.omit(tag)  #去除NA
+        #tag=unique(tag)    #去重
+        #if(length(tag)>0) insertWords(tag)
+        ##docSeg=NULL
+        ##for(si in 1:(NROW(doc)%/%10000))
+        ##{
+            ##cat(">>> ",si,"/",(NROW(doc)%/%10000))
+            ##print(Sys.time())
+            ##docSeg[si]=segmentCN(doc[((si-1)*10000+1):(si*10000)])
+        ##}
+        #docSeg=segmentCN(doc)
+        ##detach("package:Rwordseg", unload=TRUE)
 
     }
     library("tm")
     cat(">> corpus ")
-    print(Sys.time())
-    docCor=Corpus(VectorSource(docSeg))
+    #print(Sys.time())
+    #docCor=Corpus(VectorSource(docSeg))
     # remove numbers
     #docCor=tm_map(docCor, removeNumbers)
     cat(">> stopWord ")
     print(Sys.time())
     # remove stop words
-    stw=read.table(file="dict/stopWord.txt",quote="",colClasses="character")
-    docCor=tm_map(docCor,tm::removeWords,stw[,1])
+    #stw=read.table(file="dict/stopWord.txt",quote="",colClasses="character")
+    #docCor=tm_map(docCor,tm::removeWords,stw[,1])
     cat(">> tdm ")
     print(Sys.time())
     ctl=list(removePunctuation=T,minDocFreq=5,wordLengths = c(1, Inf),weighting = weightTfIdf)
@@ -292,7 +293,7 @@ if(0)
 }
 
 funl=c(izero,rmOutlier,rmOutlier2,rmOutlierMorethanZero,rmOutlierMorethanZero2,imean,auto)
-for(fi in 8:8)
+for(fi in 9:9)
 {
     if(fi<8)
     {
@@ -307,14 +308,8 @@ for(fi in 8:8)
         print(Sys.time())
         tp<-split(t,f=as.factor(t$uid))
         tcm=NULL
-        print(NROW(tp))
         for(tpi in 1:NROW(tp))
         {
-            if(tpi%%1000==1) 
-            {
-                cat("> ",tpi)
-                print(Sys.time())
-            }
             tu=tp[tpi][[1]]
             if(NROW(tu)==0) next
             foreward_mean=rep(0,7)
@@ -386,7 +381,4 @@ for(fi in 8:8)
         count=(rp$foreward_count.x+rp$comment_count.x+rp$like_count.x+1)
         pre=sum(count*prei)/sum(count)
         #print(Sys.time())
-        cat(">>> precision = ",pre,"\n")
-        #print(Sys.time())
-    }
-}
+        cat(">>> precision = ",pre,"\n") #print(Sys.time()) } }
