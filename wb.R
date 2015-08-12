@@ -2,25 +2,30 @@
 #print(Sys.time())
 #cat("> read data \n")
 
-#t<-read.csv("weibo_train_data.txt",header=T,sep="\t",quote="\n") 
-#p<-read.csv("weibo_predict_data.txt",header=T,sep="\t",quote="\n")
-#load("RDataTotal")
+#t<-read.csv("weibo_train_data.txt",header=T,sep="\t",quote="") 
+#p<-read.csv("weibo_predict_data.txt",header=T,sep="\t",quote="")
 
-#t<-read.csv("train.txt",header=T,sep="\t",quote="\n") 
-#p<-read.csv("predict.txt",header=T,sep="\t",quote="\n")
-load("RDataTest")
+#t<-read.csv("train.txt",header=T,sep="\t",quote="") 
+#p<-read.csv("predict.txt",header=T,sep="\t",quote="")
 
-#t<-read.csv("t.txt",sep="\t",quote="") 
-#p<-read.csv("p.txt",sep="\t",quote="")
-names(t)=c("uid","mid","time","foreward_count","comment_count","like_count","content")
-names(p)=c("uid","mid","time","foreward_count","comment_count","like_count","content")
+#t<-read.csv("t2.txt",sep="\t",quote="") 
+#p<-read.csv("p2.txt",sep="\t",quote="")
 
 #p=p[p$uid=="82990720c0936340c7a17e712f549b30",]
 #t=t[t$uid=="82990720c0936340c7a17e712f549b30",]
 #p=p[p$uid=="3df25e570db062bab9cbf0782cf09630",]
 #t=t[t$uid=="3df25e570db062bab9cbf0782cf09630",]
 
+#t=cbind(t,week=as.numeric(format(as.Date(t$time),"%w")))                                                                                       
+#p=cbind(p,week=as.numeric(format(as.Date(p$time),"%w")))                                                                                       
+#save.image("RDataTest")
+#save.image("RDataTotal")
+
+load("RDataTotal")
+#load("RDataTest")
 #load("seg.RData")
+
+#tp=split(t,f=as.factor(t$uid))
 
 #print(Sys.time())
 #cat("> calculate mean value \n")
@@ -37,7 +42,7 @@ izero=function(x)
     }
     return(result)
 }
-#2 4.1
+#2
 rmOutlier=function(x)
 {
     if(is.factor(x))
@@ -48,10 +53,11 @@ rmOutlier=function(x)
         xMorethanZero=x
         xOutlierx=boxplot.stats(xMorethanZero)$out
         result=as.integer((sum(x)-sum(xOutlierx))/(NROW(x)-NROW(xOutlierx)))
+        #result=round((sum(x)-sum(xOutlierx))/(NROW(x)-NROW(xOutlierx)))
     }
     return(result)
 }
-#3 4.2
+#3 
 rmOutlier2=function(x)
 {
     if(is.factor(x))
@@ -61,11 +67,15 @@ rmOutlier2=function(x)
     {
         xMorethanZero=x
         xOutlierx=boxplot.stats(xMorethanZero)$out
-        result=as.integer((sum(x)-sum(xOutlierx)+boxplot.stats(xMorethanZero)$stats[5]*NROW(xOutlierx))/NROW(x))
+        #result=as.integer((sum(x)-sum(xOutlierx)+boxplot.stats(xMorethanZero)$stats[5]*NROW(xOutlierx))/NROW(x))
+        #if(result>0) result=result-1
+        result=as.integer((sum(x)-sum(xOutlierx)+boxplot.stats(xMorethanZero)$stats[5]*NROW(xOutlierx))/NROW(x)+0.085)
+        #result=(sum(x)-sum(xOutlierx)+boxplot.stats(xMorethanZero)$stats[5]*NROW(xOutlierx))/NROW(x)
+        #result=round((sum(x)-sum(xOutlierx)+boxplot.stats(xMorethanZero)$stats[5]*NROW(xOutlierx))/NROW(x))
     }
     return(result)
 }
-#4 3.1
+#4
 rmOutlierMorethanZero=function(x)
 {
     if(is.factor(x))
@@ -76,10 +86,11 @@ rmOutlierMorethanZero=function(x)
         xMorethanZero=x[x>0]
         xOutlierx=boxplot.stats(xMorethanZero)$out
         result=as.integer((sum(x)-sum(xOutlierx))/(NROW(x)-NROW(xOutlierx)))
+        #result=round((sum(x)-sum(xOutlierx))/(NROW(x)-NROW(xOutlierx)))
     }
     return(result)
 }
-#5 3.2
+#5
 rmOutlierMorethanZero2=function(x)
 {
     if(is.factor(x))
@@ -90,6 +101,7 @@ rmOutlierMorethanZero2=function(x)
         xMorethanZero=x[x>0]
         xOutlierx=boxplot.stats(xMorethanZero)$out
         result=as.integer((sum(x)-sum(xOutlierx)+boxplot.stats(xMorethanZero)$stats[5]*NROW(xOutlierx))/NROW(x))
+        #result=round((sum(x)-sum(xOutlierx)+boxplot.stats(xMorethanZero)$stats[5]*NROW(xOutlierx))/NROW(x))
     }
     return(result)
 }
@@ -102,6 +114,7 @@ imean=function(x)
     }else
     {
         result=as.integer(mean(x))
+        #result=round(mean(x))
     }
     return(result)
 }
@@ -116,10 +129,12 @@ auto=function(x)
         if(mean(x)>5)
         {
             result=as.integer(mean(x))
+            #result=round(mean(x))
         }else
         {
             xOutlierx=boxplot.stats(x)$out
             result=as.integer((sum(x)-sum(xOutlierx)+boxplot.stats(x)$stats[5]*NROW(xOutlierx))/NROW(x))
+            #result=round((sum(x)-sum(xOutlierx)+boxplot.stats(x)$stats[5]*NROW(xOutlierx))/NROW(x))
         }
     }
     return(result)
@@ -292,20 +307,22 @@ if(0)
 }
 
 funl=c(izero,rmOutlier,rmOutlier2,rmOutlierMorethanZero,rmOutlierMorethanZero2,imean,auto)
-for(fi in 8:8)
+for(fi in 3:3)
 {
     if(fi<8)
     {
+        print(fi)
         tm<-aggregate(t,by=list(t$uid),FUN=funl[[fi]])[,c(1,5:7)]
         names(tm)<-c("uid","foreward_count","comment_count","like_count")
         pu<-p[,1:2]
         r<-merge(pu,tm,by=c("uid"),all.x=T)
     }else if(fi==8)
     {
-        #9
+        #8
         cat(">> split ")
         print(Sys.time())
         tp<-split(t,f=as.factor(t$uid))
+        print(Sys.time())
         tcm=NULL
         print(NROW(tp))
         for(tpi in 1:NROW(tp))
@@ -316,31 +333,54 @@ for(fi in 8:8)
                 print(Sys.time())
             }
             tu=tp[tpi][[1]]
+            tup=split(tu,f=as.factor(tu$week))
             if(NROW(tu)==0) next
             foreward_mean=rep(0,7)
             comment_mean=rep(0,7)
             like_mean=rep(0,7)
-            wk=c( "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
             for(wi in 1:7)
             {
                 #as.integer((sum(l1)-sum(l1out))/(NROW(l1)-NROW(l1out)))
-                f1=tu$foreward_count[ weekdays(as.Date(tu$time))==wk[wi]]
+                f1=tup[wi][[1]]$foreward_count
                 f1out=boxplot.stats(f1)$out
-                if(NROW(f1)>0) foreward_mean[wi]=as.integer((sum(f1)-sum(f1out)+boxplot.stats(f1)$stats[5]*NROW(f1out))/NROW(f1))
+                if(NROW(f1)>0)
+                {
+                    foreward_mean[wi]=as.integer((sum(f1)-sum(f1out)+boxplot.stats(f1)$stats[5]*NROW(f1out))/NROW(f1))
+                }else
+                {
+                    foreward_mean[wi]=as.integer(mean(tu$foreward_count))
+                }
 
-                c1=tu$comment_count[ weekdays(as.Date(tu$time))==wk[wi]]
+
+                c1=tup[wi][[1]]$comment_count
                 c1out=boxplot.stats(c1)$out
-                if(NROW(c1)>0) comment_mean[wi]=as.integer((sum(c1)-sum(c1out)+boxplot.stats(c1)$stats[5]*NROW(c1out))/NROW(c1))
+                if(NROW(c1)>0)
+                {
+                    comment_mean[wi]=as.integer((sum(c1)-sum(c1out)+boxplot.stats(c1)$stats[5]*NROW(c1out))/NROW(c1))
+                }else
+                {
+                    comment_mean[wi]=as.integer(mean(tu$comment_count))
+                }
 
-                l1=tu$like_count[ weekdays(as.Date(tu$time))==wk[wi]]
+                l1=tup[wi][[1]]$like_count
                 l1out=boxplot.stats(l1)$out
-                if(NROW(l1)>0) like_mean[wi]=as.integer((sum(l1)-sum(l1out)+boxplot.stats(l1)$stats[5]*NROW(l1out))/NROW(l1))
+                if(NROW(l1)>0)
+                {
+                    like_mean[wi]=as.integer((sum(l1)-sum(l1out)+boxplot.stats(l1)$stats[5]*NROW(l1out))/NROW(l1))
+                }else
+                {
+                    like_mean[wi]=as.integer(mean(tu$like_count))
+                }
 
             }
-            tcm=rbind(tcm,data.frame(rep(as.character(tu$uid[1]),7),wk,foreward_mean,comment_mean,like_mean))
+            tcm=rbind(tcm,data.frame(rep(as.character(tu$uid[1]),7),c(0:6),foreward_mean,comment_mean,like_mean))
+            #foreward_mean=mean(tu$foreward_count)
+            #comment_mean=mean(tu$comment_count)
+            #like_mean=mean(tu$like_count)
+            #tcm=rbind(tcm,tu$uid,foreward_mean,comment_mean,like_mean)
         }
         colnames(tcm)<-c("uid","week","foreward_count","comment_count","like_count")
-        pcu=cbind(p[,1:2],week=dw[(1+NROW(t)):(NROW(t)+NROW(p))])
+        pcu=cbind(p[,c(1,2,NCOL(p))])
         r<-merge(pcu,tcm,by=c("uid","week"),all.x=T)
     }else
     {
@@ -358,13 +398,13 @@ for(fi in 8:8)
     r$like_count[is.na(r$like_count)]=0
     #save into .txt
     #cat("r.NROW= ", NROW(r)," p.NROW= ",NROW(p),"\n")
-    #write.csv(r,"r.txt")
+    write.csv(r,"r.txt")
     #linux \t for tabs
     #system("sed -e 's#^\"[0-9]*\",##g' -e 's#\",#\t#g' -e 's#\"##g' -e '/_/d' r.txt > weibo_result.txt")
     #OS X ctrl+v+tab for tabs
     #if(fi==1) system("sed -e 's#^\"[0-9]*\",##g' -e 's#\",#	#g' -e 's#\"##g' -e '/_/d' r.txt > 1/weibo_result.txt")
     #if(fi==2) system("sed -e 's#^\"[0-9]*\",##g' -e 's#\",#	#g' -e 's#\"##g' -e '/_/d' r.txt > 2/weibo_result.txt")
-    #if(fi==3) system("sed -e 's#^\"[0-9]*\",##g' -e 's#\",#	#g' -e 's#\"##g' -e '/_/d' r.txt > 3/weibo_result.txt")
+    if(fi==3) system("sed -e 's#^\"[0-9]*\",##g' -e 's#\",#	#g' -e 's#\"##g' -e '/_/d' r.txt > 3/weibo_result.txt")
     #if(fi==4) system("sed -e 's#^\"[0-9]*\",##g' -e 's#\",#	#g' -e 's#\"##g' -e '/_/d' r.txt > 4/weibo_result.txt")
     #if(fi==5) system("sed -e 's#^\"[0-9]*\",##g' -e 's#\",#	#g' -e 's#\"##g' -e '/_/d' r.txt > 5/weibo_result.txt")
     #if(fi==6) system("sed -e 's#^\"[0-9]*\",##g' -e 's#\",#	#g' -e 's#\"##g' -e '/_/d' r.txt > 6/weibo_result.txt")
@@ -372,8 +412,42 @@ for(fi in 8:8)
     #if(fi==8) system("sed -e 's#^\"[0-9]*\",##g' -e 's#\",#	#g' -e 's#\"##g' -e '/_/d' r.txt > 8/weibo_result.txt")
     ##print(Sys.time())
     #cat("> Calculating pricision , only for test \n")
-
-    if(1)
+    if(0)
+    {
+        r3=r[,3]
+        r4=r[,4]
+        r5=r[,5]
+        #for(c3 in seq(-0.5,0.5,0.1))
+        #for(c3 in 0.085)
+        #{
+            #for(c4 in 0.085)
+            #{
+                for(c6 in seq(0.080,0.09,0.001))                                                                               
+                {
+                    #r[,3]=as.integer(r3+c3)
+                    #r[,4]=as.integer(r4+c4)
+                    #r[,5]=as.integer(r5+c5)
+                    r[,3]=as.integer(r3+c6)
+                    r[,4]=as.integer(r4+c6)
+                    r[,5]=as.integer(r5+c6)
+                    rp<-merge(p,r,by=c("uid","mid"))
+                    devf=abs(rp$foreward_count.y-rp$foreward_count.x)/(rp$foreward_count.x+5)
+                    devc=abs(rp$comment_count.y-rp$comment_count.x)/(rp$comment_count.x+3)
+                    devl=abs(rp$like_count.y-rp$like_count.x)/(rp$like_count.x+3)
+                    prei=1-0.5*devf-0.25*devc-0.25*devl
+                    pret=prei
+                    prei[(prei-0.8)>0]=1
+                    prei[(prei-0.8)<=0]=0
+                    count=(rp$foreward_count.x+rp$comment_count.x+rp$like_count.x+1)
+                    pre=sum(count*prei)/sum(count)
+                    #print(Sys.time())
+                    cat(">>> ",c3,c4,c5," precision = ",pre,"\n")
+                    #print(Sys.time())
+                }
+            #}
+        #}
+    }
+    if(0)
     {
         rp<-merge(p,r,by=c("uid","mid"))
         devf=abs(rp$foreward_count.y-rp$foreward_count.x)/(rp$foreward_count.x+5)
