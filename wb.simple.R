@@ -1,10 +1,10 @@
 #t<-read.csv("weibo_train_data.txt",header=T,sep="\t",quote="\n") 
 #p<-read.csv("weibo_predict_data.txt",header=T,sep="\t",quote="\n")
-load("RDataTotal")
+#load("RDataTotal")
 
 #t<-read.csv("train.txt",header=T,sep="\t",quote="\n") 
 #p<-read.csv("predict.txt",header=T,sep="\t",quote="\n")
-#load("RDataTest")
+load("RDataTest")
 #names(t)=c("uid","mid","time","foreward_count","comment_count","like_count","content")
 #names(p)=c("uid","mid","time","foreward_count","comment_count","like_count","content")
 
@@ -20,7 +20,7 @@ izero=function(x)
     }
     return(result)
 }
-#2 4.1
+#2 3.1
 rmOutlier=function(x)
 {
     if(is.factor(x))
@@ -34,7 +34,7 @@ rmOutlier=function(x)
     }
     return(result)
 }
-#3 4.2
+#3 3.2
 rmOutlier2=function(x)
 {
     if(is.factor(x))
@@ -45,6 +45,20 @@ rmOutlier2=function(x)
         xMorethanZero=x
         xOutlierx=boxplot.stats(xMorethanZero)$out
         result=as.integer((sum(x)-sum(xOutlierx)+boxplot.stats(xMorethanZero)$stats[5]*NROW(xOutlierx))/NROW(x))
+    }
+    return(result)
+}
+#3 3.3
+rmOutlier3=function(x)
+{
+    if(is.factor(x))
+    {
+        result=NA
+    }else
+    {
+        xMorethanZero=x
+        xOutlierx=boxplot.stats(xMorethanZero)$out
+        result=as.integer((sum(x)-sum(xOutlierx)+boxplot.stats(xMorethanZero)$stats[5]*NROW(xOutlierx))/NROW(x)+0.085)
     }
     return(result)
 }
@@ -61,9 +75,9 @@ imean=function(x)
     return(result)
 }
 
-funl=c(izero,rmOutlier,rmOutlier2,imean)
+funl=c(izero,rmOutlier,rmOutlier2,rmOutlier3,imean)
 
-for(fi in 1:4)
+for(fi in 4:4)
 {
     tm<-aggregate(t,by=list(t$uid),FUN=funl[[fi]])[,c(1,5:7)]
 
@@ -77,13 +91,14 @@ for(fi in 1:4)
     r$like_count[is.na(r$like_count)]=0
 
     #save into .txt
-    write.csv(r,"r.txt")
+    #write.csv(r,"r.txt")
+    write.table(r,"testr3.txt",sep="\t",row.names=F,quote=F)
     #linux \t for tabs
     #system("sed -e 's#^\"[0-9]*\",##g' -e 's#\",#\t#g' -e 's#\"##g' -e '/_/d' r.txt > weibo_result.txt")
     #OS X ctrl+v+tab for tabs
-    system("sed -e 's#^\"[0-9]*\",##g' -e 's#\",#	#g' -e 's#\"##g' -e '/_/d' r.txt > weibo_result.txt")
+    #system("sed -e 's#^\"[0-9]*\",##g' -e 's#\",#	#g' -e 's#\"##g' -e '/_/d' r.txt > weibo_result.txt")
 
-    if(0)
+    if(1)
     {
         rp<-merge(p,r,by=c("uid","mid"))
         devf=abs(rp$foreward_count.y-rp$foreward_count.x)/(rp$foreward_count.x+5)
@@ -94,6 +109,7 @@ for(fi in 1:4)
         prei[(prei-0.8)>0]=1
         prei[(prei-0.8)<=0]=0
         count=(rp$foreward_count.x+rp$comment_count.x+rp$like_count.x+1)
+        count[count>100]=100
         pre=sum(count*prei)/sum(count)
         cat(">>> precision = ",pre,"\n")
     }
