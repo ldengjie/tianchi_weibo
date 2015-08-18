@@ -1,0 +1,101 @@
+#load("RDataTest")
+#3 3.3
+rmOutlier3=function(x)
+{
+    if(is.factor(x))
+    {
+        result=NA
+    }else
+    {
+        xMorethanZero=x
+        xOutlierx=boxplot.stats(xMorethanZero)$out
+        result=as.integer((sum(x)-sum(xOutlierx)+boxplot.stats(xMorethanZero)$stats[5]*NROW(xOutlierx))/NROW(x)+0.085)
+    }
+    return(result)
+}
+
+ro<-merge(pu,tm,by=c("uid"),all.x=T)
+
+#cat("> assign 0 to new uid \n")
+#newNum=sum(is.na(ro$foreward_count))
+#ran=runif(newNum,0,1)
+ro$foreward_count[is.na(ro$foreward_count)]=1
+ro$comment_count[is.na(ro$comment_count)]=1
+ro$like_count[is.na(ro$like_count)]=1
+#ro$foreward_count[is.na(ro$foreward_count)]=(0.5+0.5*sign(ran-0.8))
+#ro$comment_count[is.na(ro$comment_count)]=(0.5+0.5*sign(ran-0.8))
+#ro$like_count[is.na(ro$like_count)]=(0.5+0.5*sign(ran-0.8))
+#ro$foreward_count[is.na(ro$foreward_count)]=(1+1*sign(ran-0.95))
+
+r3=ro
+colnames(r3)=c("uid","mid","foreward_count","comment_count","like_count")
+
+print("1")
+system("cat ~/file/weibo/job/sub120/035/*weibo_result.txt >  ~/file/weibo/job/sub120/035/035Temp")
+print("2")
+system("sed -e 's/,/	/g' -e 's/ /	/g'  ~/file/weibo/job/sub120/035/035Temp > ~/file/weibo/job/sub120/035/035.txt")
+print("3")
+r9=read.table("~/file/weibo/job/sub120/035/035.txt",header=F,sep="\t",quote="",comment="") 
+print("4")
+colnames(r9)=c("uid","mid","foreward_count","comment_count","like_count")
+
+if(NROW(r9)>NROW(r3)) print("!!!Something was wrong, check it... ")
+if(NROW(r9)==NROW(r3)) r=r9
+if(NROW(r9)<NROW(r3))
+{
+    cat("r9<r3 : ",NROW(r9),NROW(r3),"\n")
+    rsame=r3[r3$mid%in%r9$mid,]
+    rdiff=r3[!r3$mid%in%r9$mid,]
+    # step 1.merge
+    rsame2=merge(rsame,r9,by=c("uid","mid"))
+
+    # clust method
+    #ff=rsame2$foreward_count.y
+    #cc=rsame2$comment_count.y
+    #ll=rsame2$like_count.y
+    # delete outlier
+    ff=rsame2$foreward_count.x
+    cc=rsame2$comment_count.x
+    ll=rsame2$like_count.x
+
+    #f=data.frame(rsame2$foreward_count.x,rsame2$foreward_count.y)
+    #c=data.frame(rsame2$comment_count.x,rsame2$comment_count.y)
+    #l=data.frame(rsame2$like_count.x,rsame2$like_count.y)
+    # max
+    #ff=apply(f,1,function(x)max(x))
+    #cc=apply(c,1,function(x)max(x))
+    #ll=apply(l,1,function(x)max(x))
+    # min
+    #ff=apply(f,1,function(x)min(x))
+    #cc=apply(c,1,function(x)min(x))
+    #ll=apply(l,1,function(x)min(x))
+    # mean
+    #ff=apply(f,1,function(x)mean(x))
+    #cc=apply(c,1,function(x)mean(x))
+    #ll=apply(l,1,function(x)mean(x))
+    #
+    #nr=data.frame(rsame2$uid,rsame2$mid,rsame2$foreward_count.y,rsame2$comment_count.y,rsame2$like_count.y)
+    nr=data.frame(rsame2$uid,rsame2$mid,ff,cc,ll)
+    colnames(nr)=c("uid","mid","foreward_count","comment_count","like_count")
+    r=rbind(nr,rdiff)
+    write.table(r,"035.txt",sep="\t",col.names=F,quote=F)
+
+}
+
+print("6")
+print(NROW(r))
+print(NROW(p))
+rp<-merge(p,r,by=c("mid"))
+print(NROW(rp))
+devf=abs(rp$foreward_count.y-rp$foreward_count.x)/(rp$foreward_count.x+5)
+devc=abs(rp$comment_count.y-rp$comment_count.x)/(rp$comment_count.x+3)
+devl=abs(rp$like_count.y-rp$like_count.x)/(rp$like_count.x+3)
+prei=1-0.5*devf-0.25*devc-0.25*devl
+pret=prei
+prei[(prei-0.8)>0]=1
+prei[(prei-0.8)<=0]=0
+count=(rp$foreward_count.x+rp$comment_count.x+rp$like_count.x)
+count[count>100]=100
+pre=sum((count+1)*prei)/sum(count+1)
+#print(Sys.time())
+cat(">>> precision = ",pre,"\n")
