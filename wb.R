@@ -282,7 +282,7 @@ for(fi in 9:9)
                 #cat(">> segment ")
                 #print(Sys.time())
                 doc=c(as.character(tu$content)) 
-                doc=gsub(pattern="http:[a-zA-Z\\/\\.0-9]+","",doc)                            
+                doc=gsub(pattern="http:[a-zA-Z\\/\\.0-9]+","",doc)
                 tag=str_extract(doc,"#.+?#") 
                 tag=na.omit(tag)  #去除NA
                 tag=unique(tag)    #去重
