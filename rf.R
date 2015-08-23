@@ -40,3 +40,6 @@ tiaoxiuFea=rep(0,NROW(datelist))
 tiaoxiuFea[datelist[,1]%in%tiaoxiuList]=1
 dateFea=cbind(weekFea,holidayFea,tiaoxiuFea)
 
+
+#
+
