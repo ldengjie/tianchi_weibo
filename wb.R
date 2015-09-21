@@ -1,13 +1,18 @@
 #Rscript wb.R
 print(Sys.time())
 #cat("> read data \n")
-argv <- commandArgs(TRUE)
-istest <- as.numeric(argv[1])
-clustType<- as.numeric(argv[2])
-clustNum <- as.numeric(argv[3])
+#argv <- commandArgs(TRUE)
+#istest <- as.numeric(argv[1])
+#clustType<- as.numeric(argv[2])
+#clustNum <- as.numeric(argv[3])
+istest <- 0
+#clustType<- 3
+#clustNum <- 5
 
-#t<-read.csv("weibo_train_data.txt",header=T,sep="\t",quote="") 
-#p<-read.csv("weibo_predict_data.txt",header=T,sep="\t",quote="")
+t<-read.csv("weibo_train_data.txt",header=F,sep="\t",quote="") 
+p<-read.csv("weibo_predict_data.txt",header=F,sep="\t",quote="")
+colnames(t)<-c("uid","mid","time","foreward_count","comment_count","like_count","content")
+colnames(p)<-c("uid","mid","time","content")
 
 #t<-read.csv("train.txt",header=T,sep="\t",quote="") 
 #p<-read.csv("predict.txt",header=T,sep="\t",quote="")
@@ -23,7 +28,7 @@ clustNum <- as.numeric(argv[3])
 #save.image("RDataTest")
 #save.image("RDataTotal")
 
-ifelse(istest,load("RDataTest"),load("RDataTotal"))
+#ifelse(istest,load("RDataTest"),load("RDataTotal"))
 #if(istest)
 #{
 #t<-read.csv("t1.txt",sep="\t",quote="") 
@@ -173,9 +178,8 @@ test=function(x)
     return(result)
 }
 
-
 funl=c(izero,rmOutlier,rmOutlier2,rmOutlierMorethanZero,rmOutlierMorethanZero2,imean,auto)
-for(fi in 9:9)
+for(fi in 3:3)
 {
     if(fi<8)
     {
@@ -434,7 +438,7 @@ for(fi in 9:9)
         #pcu=cbind(pcm[,1:3])
         pcu=data.frame(uid=pcm$uid,mid=pcm$mid,clust=pcm$clust)
         if(NROW(pcu)>0)
-        {
+        
             r<-merge(pcu,tcm,by=c("uid","clust"),all.x=T)
             r=r[,-which(names(r)=="clust")]
         }
@@ -456,14 +460,16 @@ for(fi in 9:9)
     r$like_count[is.na(r$like_count)]=0
     #save into .txt
     #cat("r.NROW= ", NROW(r)," p.NROW= ",NROW(p),"\n")
-    if(!istest) write.csv(r,paste("r",clustType,"_",clustNum,".txt",sep=""))
+    #if(!istest) write.csv(r,paste("r",clustType,"_",clustNum,".txt",sep=""))
     #linux \t for tabs
     #system("sed -e 's#^\"[0-9]*\",##g' -e 's#\",#\t#g' -e 's#\"##g' -e '/_/d' r.txt > weibo_result.txt")
     #OS X ctrl+v+tab for tabs
     #system(paste("sed -e 's#^\"[0-9]*\",##g' -e 's#\",# #g' -e 's#\"##g' -e '/_/d' r.txt > ",fi,"/weibo_result.txt",sep=""))
-    if(!istest) system(paste("sed -e 's#^\"[0-9]*\",##g' -e 's#\",# #g' -e 's#\"##g' -e '/_/d' r",clustType,"_",clustNum,".txt > ",fi,"/",clustType,"_",clustNum,"weibo_result.txt",sep=""))
+    #if(!istest) system(paste("sed -e 's#^\"[0-9]*\",##g' -e 's#\",# #g' -e 's#\"##g' -e '/_/d' r",clustType,"_",clustNum,".txt > ",fi,"/",clustType,"_",clustNum,"weibo_result.txt",sep=""))
     ##print(Sys.time())
     #cat("> Calculating pricision , only for test \n")
+    if(!istest) write.csv(r,"3/r3.txt")
+    if(!istest) system(paste("sed -e 's#^\"[0-9]*\",##g' -e 's#\",#\t#g' -e 's#\"##g' -e '/_/d' 3/r3.txt > 3/weibo_result.txt",sep=""))
     if(0)
     {
         r3=r[,3]
@@ -474,7 +480,7 @@ for(fi in 9:9)
         #{
         #for(c4 in 0.085)
         #{
-        for(c6 in seq(0.080,0.09,0.001))                                                                               
+        for(c6 in seq(0.080,0.09,0.001))
         {
             #r[,3]=as.integer(r3+c3)
             #r[,4]=as.integer(r4+c4)

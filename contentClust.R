@@ -7,11 +7,15 @@ library(rJava)
 library(Rwordseg)
 
 print(Sys.time())
-argv <- commandArgs(TRUE)
-isReal <- as.numeric(argv[1])
-clustType<- as.numeric(argv[2])
-clustNum <- as.numeric(argv[3])
-subNum   <- as.numeric(argv[4])
+#argv <- commandArgs(TRUE)
+#isReal <- as.numeric(argv[1])
+#clustType<- as.numeric(argv[2])
+#clustNum <- as.numeric(argv[3])
+#subNum   <- as.numeric(argv[4])
+isReal <- 1
+clustType<- 3
+clustNum <- 5
+subNum   <- 8
 cat("isReal",isReal,"\n")
 cat("clustType",clustType,"\n")
 cat("clustNum ",clustNum ,"\n")
@@ -20,12 +24,12 @@ cat("subNum   ",subNum   ,"\n")
 print(Sys.time())
 if(isReal)
 {
-    t<-read.csv(paste("~/file/weibo/sub/real120/td",subNum,".txt",sep=""),header=T,sep="\t",quote="",comment="") 
-    p<-read.csv(paste("~/file/weibo/sub/real120/pd",subNum,".txt",sep=""),header=T,sep="\t",quote="",comment="")
+    t<-read.csv(paste("~/file/weibo/sub/real/td",subNum,".txt",sep=""),header=T,sep="\t",quote="",comment="") 
+    p<-read.csv(paste("~/file/weibo/sub/real/pd",subNum,".txt",sep=""),header=T,sep="\t",quote="",comment="")
 }else
 {
-    t<-read.csv(paste("~/file/weibo/sub/test104/td",subNum,".txt",sep=""),header=T,sep="\t",quote="",comment="") 
-    p<-read.csv(paste("~/file/weibo/sub/test104/pd",subNum,".txt",sep=""),header=T,sep="\t",quote="",comment="")
+    t<-read.csv(paste("~/file/weibo/sub/test/td",subNum,".txt",sep=""),header=T,sep="\t",quote="",comment="") 
+    p<-read.csv(paste("~/file/weibo/sub/test/pd",subNum,".txt",sep=""),header=T,sep="\t",quote="",comment="")
 }
 print(Sys.time())
 
@@ -50,6 +54,7 @@ if(NROW(p)>0)
     for(tpi in 1:NROW(tp))
     {
         cat(">>>>>> ",tpi)
+        if(tpi==72) next 
         tu=tp[tpi][[1]]
         cat(" [ ",NROW(tu)," docs ] ")
         print(Sys.time())
@@ -162,10 +167,10 @@ if(NROW(p)>0)
     r$comment_count[is.na(r$comment_count)]=0
     r$like_count[is.na(r$like_count)]=0
     #save into .txt
-    write.csv(r,paste("~/file/weibo/job/sub120/",isReal,clustType,clustNum,"/r",isReal,"_",clustType,"_",clustNum,"_",subNum,".txt",sep=""))
+    write.csv(r,paste("~/file/weibo/job/sub/",isReal,clustType,clustNum,"/r",isReal,"_",clustType,"_",clustNum,"_",subNum,".txt",sep=""))
     #OS X ctrl+v+tab for tabs
     #system(paste("sed -e 's#^\"[0-9]*\",##g' -e 's#\",# #g' -e 's#\"##g' -e '/_/d' r.txt > ",fi,"/weibo_result.txt",sep=""))
-    system(paste("sed -e 's#^\"[0-9]*\",##g' -e 's#\",# #g' -e 's#\"##g' -e '/_/d' ~/file/weibo/job/sub120/",isReal,clustType,clustNum,"/r",isReal,"_",clustType,"_",clustNum,"_",subNum,".txt > ~/file/weibo/job/sub120/",isReal,clustType,clustNum,"/",clustType,"_",clustNum,"_",subNum,"weibo_result.txt",sep=""))
+    system(paste("sed -e 's#^\"[0-9]*\",##g' -e 's#\",# #g' -e 's#\"##g' -e '/_/d' ~/file/weibo/job/sub/",isReal,clustType,clustNum,"/r",isReal,"_",clustType,"_",clustNum,"_",subNum,".txt > ~/file/weibo/job/sub/",isReal,clustType,clustNum,"/",clustType,"_",clustNum,"_",subNum,"weibo_result.txt",sep=""))
 
     cat(" Finished this work ... ")
 

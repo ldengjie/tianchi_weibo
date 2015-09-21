@@ -1,0 +1,28 @@
+1. 下载数据  
+    weibo_predict_data.txt  
+    weibo_train_data.txt  
+  
+2. 分割数据到 sub/real or sub/test，自己设置路径  
+    saveinto.sub.R  
+  
+3. 配置集群作业，job/sub/genjob1.sh jobTmp.sh genjob0.sh  
+  
+4. 根据内容分类，分别得到各类的平均. job/sub/135/*weibo_result.txt，需要手动合并,或者步骤6.  
+    contentClust.R  
+  
+5. 去掉异常点后，直接计算用户的平均值. 3/weibo_result.txt  
+    mean.R  
+  
+6. contentClust.R会有一些uid失败，（内存不足。。。),用mean.R补齐,结果保存到 9/weibo_result.txt  
+    ContentClust.ana.R  
+  
+7. 其他文件说明。  
+  
+cdf.R   计算cdf  
+groupByWeek.R 把微博按星期分类，假设结果跟星期有关系。  
+newUser.R 设想新用户的结果不是000,分布跟历史一致，未完成。  
+userClust.R 按微博数量对用户进行分类,好像结果不怎么好。  
+wb.R 集合，包括1..7 8 9 ,试验用。  
+  
+rf.job.R  集群作业版本  
+rf.R  单机版本  

@@ -1,10 +1,12 @@
-#t<-read.csv("weibo_train_data.txt",header=T,sep="\t",quote="\n") 
-#p<-read.csv("weibo_predict_data.txt",header=T,sep="\t",quote="\n")
+t<-read.csv("weibo_train_data.txt",header=T,sep="\t",quote="\n") 
+p<-read.csv("weibo_predict_data.txt",header=T,sep="\t",quote="\n")
+colnames(t)<-c("uid","mid","time","foreward_count","comment_count","like_count","content")
+colnames(p)<-c("uid","mid","time","content")
 #load("RDataTotal")
 
 #t<-read.csv("train.txt",header=T,sep="\t",quote="\n") 
 #p<-read.csv("predict.txt",header=T,sep="\t",quote="\n")
-load("RDataTest")
+#load("RDataTest")
 #names(t)=c("uid","mid","time","foreward_count","comment_count","like_count","content")
 #names(p)=c("uid","mid","time","foreward_count","comment_count","like_count","content")
 
@@ -35,7 +37,7 @@ rmOutlier=function(x)
     return(result)
 }
 #3 3.2
-rmOutlier2=function(x)
+rmOutlier3=function(x)
 {
     if(is.factor(x))
     {
@@ -49,7 +51,7 @@ rmOutlier2=function(x)
     return(result)
 }
 #3 3.3
-rmOutlier3=function(x)
+rmOutlier2=function(x)
 {
     if(is.factor(x))
     {
@@ -77,7 +79,7 @@ imean=function(x)
 
 funl=c(izero,rmOutlier,rmOutlier2,rmOutlier3,imean)
 
-for(fi in 4:4)
+for(fi in 3:3)
 {
     tm<-aggregate(t,by=list(t$uid),FUN=funl[[fi]])[,c(1,5:7)]
 
@@ -92,13 +94,15 @@ for(fi in 4:4)
 
     #save into .txt
     #write.csv(r,"r.txt")
-    write.table(r,"testr3.txt",sep="\t",row.names=F,quote=F)
+    #write.table(r,"testr3.txt",sep="\t",row.names=F,quote=F)
     #linux \t for tabs
     #system("sed -e 's#^\"[0-9]*\",##g' -e 's#\",#\t#g' -e 's#\"##g' -e '/_/d' r.txt > weibo_result.txt")
     #OS X ctrl+v+tab for tabs
     #system("sed -e 's#^\"[0-9]*\",##g' -e 's#\",#	#g' -e 's#\"##g' -e '/_/d' r.txt > weibo_result.txt")
+    if(!istest) write.csv(r,"3/r3.txt")
+    if(!istest) system(paste("sed -e 's#^\"[0-9]*\",##g' -e 's#\",#\t#g' -e 's#\"##g' -e '/_/d' 3/r3.txt > 3/weibo_result.txt",sep=""))
 
-    if(1)
+    if(0)
     {
         rp<-merge(p,r,by=c("uid","mid"))
         devf=abs(rp$foreward_count.y-rp$foreward_count.x)/(rp$foreward_count.x+5)
